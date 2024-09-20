@@ -1,19 +1,34 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TextInput, Button } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import * as Location from 'expo-location';
 
 export default function App() {
 
   const apikey = process.env.EXPO_PUBLIC_API_KEY;
 
+  useEffect(() => { getMylocation() }, []);
+
   const [address, setAddress] = useState('');
+  const [mylocation, setMylocation] = useState(null);
   const [location, setLocation] = useState({
     latitude: 60.200692,
     longitude: 24.934302,
     latitudeDelta: 0.0322,
     longitudeDelta: 0.0221
   });
+
+  const getMylocation = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('No permission to get location')
+      return;
+    }
+    const mylocation = await Location.getCurrentPositionAsync({});
+    setLocation({...location, latitude: mylocation.coords.latitude, longitude: mylocation.coords.longitude})
+    console.log(mylocation);
+  }
 
   const getLocation = () => {
     fetch(`https://geocode.maps.co/search?q=${address}&api_key=${apikey}`)
